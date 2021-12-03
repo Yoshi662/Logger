@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Logger.SimpleLogger
+namespace Logger
 {
     public static class Logger
     {
@@ -26,14 +26,19 @@ namespace Logger.SimpleLogger
         /// </summary>
         /// <param name="loglevel">Level of severity</param>
         /// <param name="loginfo">Information to be logged</param>
+        /// <param name="flushConsole">Whether or not the console should be cleaned before logging</param>
         public static void Log(LogLevel loglevel, string loginfo, bool flushConsole = false)
         {
             lock (_MessageLock)
             {
                 if (!File.Exists(Logfile))
-                    File.Create(Logfile);
+				{
+					File.Create(Logfile);
+                    System.Threading.Thread.Sleep(100); //Sometimes creating and writing into the same file can lead to issues. This delay should fix it; I know it's a bit yanky but it works
+				}
 
-                if (flushConsole)
+
+				if (flushConsole)
                 {
                     Console.Clear();
                 }
@@ -80,10 +85,29 @@ namespace Logger.SimpleLogger
 
     public enum LogLevel
     {
+        /// <summary>
+        /// Every event can be traced
+        /// </summary>
         Trace,
+
+        /// <summary>
+        /// For diagnosting issues 
+        /// </summary>
         Debug,
+
+        /// <summary>
+        /// General info that can be thrown at the user
+        /// </summary>
         Info,
+
+        /// <summary>
+        /// Useful to show exceptions or lesser errors
+        /// </summary>
         Warn,
+
+        /// <summary>
+        /// For Unhandled exceptions or application finishing unexpected endings
+        /// </summary>
         Crit
     }
 }

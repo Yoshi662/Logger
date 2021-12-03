@@ -20,6 +20,7 @@ namespace Logger.AdvancedLogger
 
     public static class Events
     {
+    //Example of an event
         public static EventID Queue { get; } = new EventID(1, "PROGRAM_START");
     }
 }
