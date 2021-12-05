@@ -7,23 +7,27 @@ using System.Threading.Tasks;
 namespace Logger.AdvancedLogger
 {
     public class LoggerConfig
-    {
+    { 
         public string LogFile { get; set; }
         public string LogFolder { get; set; }
-        public LogLevel LogLevel { get; set; }
+        public int MinimumSeverityLevel { get; set; }
         public bool SaveLogToFile { get; set; }
         public LogRotationMode LogRotationMode { get; set; }
         public uint Size { get; set; }
         public LogRotationTime LogRotationTime { get; set; }
         public bool UseEvents { get; set; }
-        public bool UseDebugInfo { get; set; }
+        public bool ShowCallerMethod { get; set; }
+		public bool ShowLineNumber { get; set; }
+        public int NamePadding { get; set; }
 
-        public LoggerConfig LoadConfig(string path)
-        {
-            throw new NotImplementedException();
-        }
+		public LoggerConfig LoadConfig(string path)
+		{
+			throw new NotImplementedException();
 
-        public void SaveConfig(string path, LoggerConfig config)
+            
+		}
+
+		public void SaveConfig(string path, LoggerConfig config)
         {
             throw new NotImplementedException();
         }
