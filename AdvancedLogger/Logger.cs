@@ -16,6 +16,7 @@ namespace Logger.AdvancedLogger
 
 		//TODO Add documentation and comments
 		//TODO Add Log(LogLevel level, Exception e, Eventid...
+		//TODO? Add tests
 
 		/// <summary>
 		/// Logs into console and file
@@ -43,13 +44,39 @@ namespace Logger.AdvancedLogger
 					string LogMessage = $"{Datetime}{DebugMsg}{(Config.UseEvents ? EventMsg : "")}[{(Config.ShowDebugInfo ? CallerMethod : "")}] {loginfo}";
 
 					Console.WriteLine($"{AnsiReset}{AnsiStart}{LogMessage}{AnsiReset}");
-					SaveToFile(LogMessage);
+
+					if(Config.SaveLogToFile) SaveToFile(LogMessage);
 				}
 			}
 		}
 
-		//TODO add logic for file rotation
-		private static void SaveToFile(string s) => File.AppendAllText(Config.LogFile, s);
+		//RECAP add logic for time file rotation 
+		private static void SaveToFile(string s)
+		{
+
+			string logpath = $"{Config.LogFolder}\\{Config.LogFile}";
+			FileInfo fileinfo = new(logpath);
+
+			if (Config.LogRotationMode == LogRotationMode.Size)
+			{
+				if (Config.Size == null) throw new ArgumentException("You have selected a rotation mode by size, yet there is no size specified");
+
+				if (fileinfo.Length >= Config.Size)
+				{
+					File.Move(logpath, $"{Config.LogFolder}\\{Config.RotatedLogName}");
+				}
+			}
+
+			if (Config.LogRotationMode == LogRotationMode.Date)
+			{
+				if (Config.LogRotationTime == null) throw new ArgumentException("You have selected a rotation mode by time, yet there is no time specified");
+
+				//RotatefileLogicHere
+
+			}
+
+			File.AppendAllText(logpath, s);
+		}
 
 		private static string GetDebugInfo(){
 			string output = "";
