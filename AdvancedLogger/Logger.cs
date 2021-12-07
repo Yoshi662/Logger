@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,66 +12,57 @@ namespace Logger.AdvancedLogger
 	{
 		private static object _MessageLock = new();
 
-		public static LoggerConfig Config;
+		public static LoggerConfig Config = LoggerConfig.DefaultConfig;
+
+		//TODO Add documentation and comments
+		//TODO Add Log(LogLevel level, Exception e, Eventid...
 
 		/// <summary>
 		/// Logs into console and file
 		/// </summary>
 		/// <param name="level">Level of severity</param>
 		/// <param name="loginfo">Information to be logged</param>
-		public static void Log(LogLevel level, string loginfo, bool flushConsole = false)
+		public static void Log(LogLevel level, string loginfo, EventID eventID = null, bool flushConsole = false)
 		{
-			lock (_MessageLock)
-			{
-				//TODO File Logic Here
-				//TODO Add support for events
+			eventID ??= new(0, "");
 
+			lock (_MessageLock) //Locking this part of the code saves us from using a singleton pattern (ok no. but it helps)
+			{
 				if (level.Severity >= Config.MinimumSeverityLevel)
 				{
 					if (flushConsole) Console.Clear();
 
-					Console.WriteLine($"\u001b[0m{level.GetANSIBackgroundColor()}{level.GetANSIForegroundColor()}" +
-					$"[{DateTime.UtcNow:u}][{level.Name,-5}] {loginfo}");
+					string AnsiStart = $"{level.GetANSIBackgroundColor()}{level.GetANSIForegroundColor()}";
+					string Datetime = $"[{DateTime.UtcNow:u}]";
+					string DebugMsg = $"[{level.Name,-5}]";
+					string eventname = eventID.Name.Length > 10 ? eventID.Name[..10] : eventID.Name;
+					string EventMsg = $"[{eventname,-10}/{eventID.ID:000}]";
+					string CallerMethod = GetDebugInfo();
+					string AnsiReset = "\u001b[0m";
+
+					string LogMessage = $"{Datetime}{DebugMsg}{(Config.UseEvents ? EventMsg : "")}[{(Config.ShowDebugInfo ? CallerMethod : "")}] {loginfo}";
+
+					Console.WriteLine($"{AnsiReset}{AnsiStart}{LogMessage}{AnsiReset}");
+					SaveToFile(LogMessage);
 				}
 			}
 		}
-	}
 
-	public class LogLevel
-	{
-		public string Name { get; private set; }
-		public int Severity { get; private set; }
-		public bool Highlight { get; private set; }
-		public Color Foreground { get; private set; }
-		public Color Background { get; private set; }
+		//TODO add logic for file rotation
+		private static void SaveToFile(string s) => File.AppendAllText(Config.LogFile, s);
 
-		public LogLevel(string name, int severity, bool highlight, Color foreground, Color background)
-		{
-			Name = name;
-			Severity = severity;
-			Highlight = highlight;
-			Foreground = foreground;
-			Background = background;
+		private static string GetDebugInfo(){
+			string output = "";
+
+			StackTrace stack = new(true);
+			int stackframes = stack.GetFrames().Length;
+			for (int i = 1; i < stackframes; i++) //Frame 0 is this Method, and Frame 1 is Log()
+			{
+				output += stack.GetFrame(i).GetMethod().Name + (i == stackframes - 1 ? "()" : ".");
+			}
+			output += $"l:{stack.GetFrame(2).GetFileLineNumber():0000}"; //Frame 2 is always the caller of Log()
+			
+			return output;
 		}
-
-		public string GetANSIForegroundColor()
-		{
-			return $"\u001b[38;2;{Foreground.R};{Foreground.G};{Foreground.B}m";
-		}
-		public string GetANSIBackgroundColor()
-		{
-			return $"\u001b[48;2;{Background.R};{Background.G};{Background.B}m";
-		}
-
-		public static readonly LogLevel Trace = new("Trace", 5, false, Color.LightGray, Color.Black);
-		public static readonly LogLevel Debug = new("Debug", 10, false, Color.DarkGray, Color.Black);
-		public static readonly LogLevel Info = new("Info", 20, false, Color.DeepSkyBlue, Color.Black);
-		public static readonly LogLevel Notice = new("Notic", 25, true, Color.Lime, Color.Black);
-		public static readonly LogLevel Mark = new("Mark", 30, false, Color.Black, Color.Gold);
-		public static readonly LogLevel Warning = new("Warn", 40, false, Color.Yellow, Color.Black);
-		public static readonly LogLevel Heading = new("Head", 45, true, Color.Black, Color.CornflowerBlue);
-		public static readonly LogLevel Critical = new("Crit", 50, true, Color.Red, Color.Black);
-		public static readonly LogLevel Alert = new("Alert", 60, true, Color.Black, Color.DarkRed);
-		public static readonly LogLevel Emergency = new("Emerg", 999, true, Color.White, Color.Red);
 	}
 }
