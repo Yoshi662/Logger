@@ -17,6 +17,7 @@ namespace Logger.AdvancedLogger
 		//TODO Add documentation and comments
 		//TODO Add Log(LogLevel level, Exception e, Eventid...
 		//TODO? Add tests
+		//TODO? Use a Singleton on this class so I can use a StreamWriter instead of a File.Append to greatly improve performance
 
 		/// <summary>
 		/// Logs into console and file
@@ -45,40 +46,62 @@ namespace Logger.AdvancedLogger
 
 					Console.WriteLine($"{AnsiReset}{AnsiStart}{LogMessage}{AnsiReset}");
 
-					if(Config.SaveLogToFile) SaveToFile(LogMessage);
+					if (Config.SaveLogToFile) SaveToFile(LogMessage + "\r\n");
 				}
 			}
 		}
 
-		//RECAP add logic for time file rotation 
 		private static void SaveToFile(string s)
 		{
-
 			string logpath = $"{Config.LogFolder}\\{Config.LogFile}";
 			FileInfo fileinfo = new(logpath);
+			
+			bool NeedsRotation = false;
 
 			if (Config.LogRotationMode == LogRotationMode.Size)
 			{
 				if (Config.Size == null) throw new ArgumentException("You have selected a rotation mode by size, yet there is no size specified");
 
-				if (fileinfo.Length >= Config.Size)
-				{
-					File.Move(logpath, $"{Config.LogFolder}\\{Config.RotatedLogName}");
-				}
+				NeedsRotation = fileinfo.Length >= Config.Size;
+
 			}
 
 			if (Config.LogRotationMode == LogRotationMode.Date)
 			{
 				if (Config.LogRotationTime == null) throw new ArgumentException("You have selected a rotation mode by time, yet there is no time specified");
 
-				//RotatefileLogicHere
 
+				switch (Config.LogRotationTime)
+				{
+					case LogRotationTime.Daily:
+						NeedsRotation = fileinfo.CreationTimeUtc.AddMinutes(5) <= DateTime.UtcNow; //TODO change this on release
+						break;
+
+					case LogRotationTime.Weekly:
+						NeedsRotation = fileinfo.CreationTimeUtc.AddDays(7) <= DateTime.UtcNow;
+						break;
+
+					case LogRotationTime.Monthly:
+						NeedsRotation = fileinfo.CreationTimeUtc.AddMonths(1) <= DateTime.UtcNow;
+						break;
+				}
+			}
+			if (!Directory.Exists(Config.LogFolder))
+			{
+				Directory.CreateDirectory(Config.LogFolder);
 			}
 
 			File.AppendAllText(logpath, s);
+
+			if (fileinfo.Exists && NeedsRotation)
+			{
+				fileinfo.CreationTimeUtc = DateTime.UtcNow;
+				File.Move(logpath, $"{Config.LogFolder}\\{Config.RotatedLogName}");
+			}
 		}
 
-		private static string GetDebugInfo(){
+		private static string GetDebugInfo()
+		{
 			string output = "";
 
 			StackTrace stack = new(true);
@@ -88,7 +111,7 @@ namespace Logger.AdvancedLogger
 				output += stack.GetFrame(i).GetMethod().Name + (i == stackframes - 1 ? "()" : ".");
 			}
 			output += $"l:{stack.GetFrame(2).GetFileLineNumber():0000}"; //Frame 2 is always the caller of Log()
-			
+
 			return output;
 		}
 	}

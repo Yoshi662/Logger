@@ -10,7 +10,6 @@ namespace Logger.AdvancedLogger
 	{
 		public static readonly LoggerConfig DefaultConfig = new() {
 			LogFile = "CurrentLog.txt", 
-			RotatedLogName = $"{DateTime.UtcNow:yyyyMMdd_hhmmss}.log",
 			LogFolder = "Logs",
 			MinimumSeverityLevel = 0,
 			SaveLogToFile = false,
@@ -20,7 +19,7 @@ namespace Logger.AdvancedLogger
 		};
 
 		public string LogFile { get; set; }
-		public string RotatedLogName { get; set; }
+		public string RotatedLogName { get => $"{DateTime.UtcNow:yyyyMMdd_hhmmss}.log"; }
 		public string LogFolder { get; set; }
 		public int MinimumSeverityLevel { get; set; }
 		public bool SaveLogToFile { get; set; }
