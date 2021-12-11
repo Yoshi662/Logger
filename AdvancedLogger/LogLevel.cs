@@ -2,19 +2,26 @@
 
 namespace Logger.AdvancedLogger
 {
+	/// <summary>
+	/// Represents a level of severity on your application
+	/// </summary>
 	public class LogLevel
 	{
+		/// <summary>
+		/// Name of the level. It will get cropped to 5 characters.
+		/// </summary>
 		public string Name { get; private set; }
+		/// <summary>
+		/// Level of Severity
+		/// </summary>
 		public int Severity { get; private set; }
-		public bool Highlight { get; private set; }
 		public Color Foreground { get; private set; }
 		public Color Background { get; private set; }
 
-		public LogLevel(string name, int severity, bool highlight, Color foreground, Color background)
+		public LogLevel(string name, int severity, Color foreground, Color background)
 		{
 			Name = name;
 			Severity = severity;
-			Highlight = highlight;
 			Foreground = foreground;
 			Background = background;
 		}
@@ -27,16 +34,49 @@ namespace Logger.AdvancedLogger
 		{
 			return $"\u001b[48;2;{Background.R};{Background.G};{Background.B}m";
 		}
-
-		public static readonly LogLevel Trace = new("Trace", 5, false, Color.DarkGray, Color.Black);
-		public static readonly LogLevel Debug = new("Debug", 10, false, Color.LightGray, Color.Black);
-		public static readonly LogLevel Info = new("Info", 20, false, Color.DeepSkyBlue, Color.Black);
-		public static readonly LogLevel Notice = new("Notic", 25, true, Color.Lime, Color.Black);
-		public static readonly LogLevel Mark = new("Mark", 30, false, Color.Black, Color.Gold);
-		public static readonly LogLevel Warning = new("Warn", 40, false, Color.Yellow, Color.Black);
-		public static readonly LogLevel Heading = new("Head", 45, true, Color.Black, Color.CornflowerBlue);
-		public static readonly LogLevel Critical = new("CRIT", 50, true, Color.Red, Color.Black);
-		public static readonly LogLevel Alert = new("ALERT", 60, true, Color.Black, Color.DarkRed);
-		public static readonly LogLevel Emergency = new("EMERG", 999, true, Color.White, Color.Red);
+		/// <summary>
+		/// Useful to log everything
+		/// </summary>
+		public static readonly LogLevel Trace = new("Trace", 5, Color.DarkGray, Color.Black);
+		/// <summary>
+		/// Useful to debug info
+		/// </summary>
+		public static readonly LogLevel Debug = new("Debug", 10, Color.LightGray, Color.Black);
+		/// <summary>
+		/// Useful information or display of the normal flow of the program
+		/// </summary>
+		public static readonly LogLevel Info = new("Info", 20, Color.DeepSkyBlue, Color.Black);
+		/// <summary>
+		/// Information that should be highlighted above average
+		/// </summary>
+		public static readonly LogLevel Notice = new("Notic", 25, Color.Lime, Color.Black);
+		/// <summary>
+		/// Useful to mark a certain point in the execution of the without stopping it.
+		/// </summary>
+		public static readonly LogLevel Mark = new("Mark", 30, Color.Black, Color.Gold);
+		/// <summary>
+		/// Useful to log handled scenarios
+		/// </summary>
+		public static readonly LogLevel Warning = new("Warn", 40, Color.Yellow, Color.Black);
+		/// <summary>
+		/// Start of a bigger part
+		/// </summary>
+		public static readonly LogLevel Heading = new("Head", 45, Color.Black, Color.CornflowerBlue);
+		/// <summary>
+		/// Useful to log handled exceptions
+		/// </summary>
+		public static readonly LogLevel Error = new("Error", 50, Color.DarkOrange, Color.Black);
+		/// <summary>
+		/// Useful to log unhandled exceptions
+		/// </summary>
+		public static readonly LogLevel Critical = new("CRIT", 60, Color.Red, Color.Black);
+		/// <summary>
+		/// Useful when critical systems are down
+		/// </summary>
+		public static readonly LogLevel Alert = new("ALERT", 70, Color.Black, Color.DarkRed);
+		/// <summary>
+		/// Run
+		/// </summary>
+		public static readonly LogLevel Emergency = new("EMERG", 999, Color.White, Color.Red);
 	}
 }

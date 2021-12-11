@@ -12,18 +12,23 @@ namespace Logger.AdvancedLogger
 	{
 		private static object _MessageLock = new();
 
+		/// <summary>
+		/// Current configuration of the logger. It has a Default Configuration
+		/// </summary>
 		public static LoggerConfig Config = LoggerConfig.DefaultConfig;
 
-		//TODO Add documentation and comments
-		//TODO Add Log(LogLevel level, Exception e, Eventid...
+		//TODO add docs to LoggerConfig
 		//TODO? Add tests
 		//TODO? Use a Singleton on this class so I can use a StreamWriter instead of a File.Append to greatly improve performance
 
 		/// <summary>
-		/// Logs into console and file
+		/// Logs a message into the console
 		/// </summary>
 		/// <param name="level">Level of severity</param>
 		/// <param name="loginfo">Information to be logged</param>
+		/// <param name="eventID">Event ID </param> //TODO
+		/// <param name="flushConsole">If true, clears the console before sending the message</param>
+		/// <exception cref="ArgumentException">It gets thrown when rotations are enabled but no rotation setting is set</exception>
 		public static void Log(LogLevel level, string loginfo, EventID eventID = null, bool flushConsole = false)
 		{
 			eventID ??= new(0, "");
@@ -51,6 +56,24 @@ namespace Logger.AdvancedLogger
 			}
 		}
 
+		/// <summary>
+		/// Logs an exception into the console
+		/// </summary>
+		/// <param name="level">Level of severity</param>
+		/// <param name="exception">Exception to be logged</param>
+		/// <param name="eventID">Event ID </param> //TODO
+		/// <param name="flushConsole">If true, clears the console before sending the message</param>
+		public static void Log(LogLevel level, Exception exception, EventID eventID = null, bool flushConsole = false)
+		{
+			string output = $"\n{exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}";
+			if (exception.InnerException != null)
+				output += $"\n{exception.InnerException.GetType().Name}: {exception.InnerException.Message}\n{exception.InnerException.StackTrace}";
+			
+
+			Log(level, output, eventID,	flushConsole);
+		}
+
+
 		private static void SaveToFile(string s)
 		{
 			string logpath = $"{Config.LogFolder}\\{Config.LogFile}";
@@ -60,17 +83,13 @@ namespace Logger.AdvancedLogger
 
 			if (Config.LogRotationMode == LogRotationMode.Size)
 			{
-				if (Config.Size == null) throw new ArgumentException("You have selected a rotation mode by size, yet there is no size specified");
+				if (Config.Size == 0) throw new ArgumentException("You have selected a rotation mode by size, yet size is zero");
 
 				NeedsRotation = fileinfo.Length >= Config.Size;
-
 			}
 
 			if (Config.LogRotationMode == LogRotationMode.Date)
 			{
-				if (Config.LogRotationTime == null) throw new ArgumentException("You have selected a rotation mode by time, yet there is no time specified");
-
-
 				switch (Config.LogRotationTime)
 				{
 					case LogRotationTime.Daily:
@@ -87,9 +106,8 @@ namespace Logger.AdvancedLogger
 				}
 			}
 			if (!Directory.Exists(Config.LogFolder))
-			{
 				Directory.CreateDirectory(Config.LogFolder);
-			}
+			
 
 			File.AppendAllText(logpath, s);
 
@@ -99,7 +117,10 @@ namespace Logger.AdvancedLogger
 				File.Move(logpath, $"{Config.LogFolder}\\{Config.RotatedLogName}");
 			}
 		}
-
+		/// <summary>
+		/// It gets info of the caller
+		/// </summary>
+		/// <returns></returns>
 		private static string GetDebugInfo()
 		{
 			string output = "";
