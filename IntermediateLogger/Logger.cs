@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Logger.AdvancedLogger
+namespace Logger.IntermediateLogger
 {
 	public static class Logger
 	{
@@ -17,15 +17,6 @@ namespace Logger.AdvancedLogger
 		/// </summary>
 		public static LoggerConfig Config = LoggerConfig.DefaultConfig;
 
-		//TODO add docs to LoggerConfig
-		//TODO? Add tests
-		//TODO? Use a Singleton on this class so I can use a StreamWriter instead of a File.Append to greatly improve performance
-
-
-		private Logger()
-		{
-			Engine = new(Config);
-		}
 
 		/// <summary>
 		/// Logs a message into the console
@@ -99,7 +90,7 @@ namespace Logger.AdvancedLogger
 				switch (Config.LogRotationTime)
 				{
 					case LogRotationTime.Daily:
-						NeedsRotation = fileinfo.CreationTimeUtc.AddMinutes(5) <= DateTime.UtcNow; //TODO change this on release
+						NeedsRotation = fileinfo.CreationTimeUtc.AddDays(1) <= DateTime.UtcNow;
 						break;
 
 					case LogRotationTime.Weekly:
