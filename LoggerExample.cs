@@ -22,6 +22,7 @@ namespace Logger.AdvancedLogger
 			Logger.Log(LogLevel.Critical, "This is an example of a message log with different levels of severity");
 			Logger.Log(LogLevel.Alert, "This is an example of a message log with different levels of severity");
 			Logger.Log(LogLevel.Emergency, "This is an example of a message log with different levels of severity", new EventID(41, "ProgramEndo"));
+
 			try
 			{
 				var s = "";
@@ -31,7 +32,9 @@ namespace Logger.AdvancedLogger
 			{
 				Logger.Log(LogLevel.Critical, e);
 			}
+
 			a();
+
 			Console.WriteLine("\u001b[0m");
 		}
 		private static void a() { b(); }

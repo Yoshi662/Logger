@@ -34,7 +34,7 @@ namespace Logger
                 if (!File.Exists(Logfile))
 				{
 					File.Create(Logfile);
-                    System.Threading.Thread.Sleep(100); //Sometimes creating and writing into the same file can lead to issues. This delay should fix it; I know it's a bit yanky but it works
+                    System.Threading.Thread.Sleep(100); //Sometimes creating and writing into the same file can lead to issues. This delay should fix it. I know it's a bit yanky but it works
 				}
 
 
