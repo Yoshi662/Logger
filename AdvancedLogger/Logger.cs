@@ -8,23 +8,45 @@ using System.Threading.Tasks;
 
 namespace Logger.AdvancedLogger
 {
-	public static class Logger
+	//TODO add docs to LoggerConfig
+	//TODO? Add tests
+	//TODO? Use a Singleton on this class so I can use a StreamWriter instead of a File.Append to greatly improve performance
+
+
+
+	public class Logger
 	{
 		private static object _MessageLock = new();
 
 		/// <summary>
 		/// Current configuration of the logger. It has a Default Configuration
 		/// </summary>
-		public static LoggerConfig Config = LoggerConfig.DefaultConfig;
+		public LoggerConfig Config = LoggerConfig.DefaultConfig;
+		private LogEngine Engine;
 
-		//TODO add docs to LoggerConfig
-		//TODO? Add tests
-		//TODO? Use a Singleton on this class so I can use a StreamWriter instead of a File.Append to greatly improve performance
+		private static Logger _instance;
+
+		/// <summary>
+		/// Singleton Instance of the Logger
+		/// </summary>
+		public static Logger Instance
+		{
+			get
+			{
+				lock (_MessageLock)
+				{
+					return _instance ?? (_instance ??= new Logger());
+				}
+			}
+		}
 
 
 		private Logger()
 		{
-			Engine = new(Config);
+			if (Config.SaveLogToFile)
+			{
+				Engine = new(Config);
+			}
 		}
 
 		/// <summary>
@@ -35,31 +57,29 @@ namespace Logger.AdvancedLogger
 		/// <param name="eventID">Event ID </param> //TODO
 		/// <param name="flushConsole">If true, clears the console before sending the message</param>
 		/// <exception cref="ArgumentException">It gets thrown when rotations are enabled but no rotation setting is set</exception>
-		public static void Log(LogLevel level, string loginfo, EventID eventID = null, bool flushConsole = false)
+		public void Log(LogLevel level, string loginfo, EventID eventID = null, bool flushConsole = false)
 		{
 			eventID ??= new(0, "");
 
-			lock (_MessageLock) //Locking this part of the code saves us from using a singleton pattern (ok no. but it helps)
+			if (level.Severity >= Config.MinimumSeverityLevel)
 			{
-				if (level.Severity >= Config.MinimumSeverityLevel)
-				{
-					if (flushConsole) Console.Clear();
+				if (flushConsole) Console.Clear();
 
-					string AnsiStart = $"{level.GetANSIBackgroundColor()}{level.GetANSIForegroundColor()}";
-					string Datetime = $"[{DateTime.UtcNow:u}]";
-					string DebugMsg = $"[{level.Name,-5}]";
-					string eventname = eventID.Name.Length > 10 ? eventID.Name[..10] : eventID.Name;
-					string EventMsg = $"[{eventname,-10}/{eventID.ID:000}]";
-					string CallerMethod = GetDebugInfo();
-					string AnsiReset = "\u001b[0m";
+				string AnsiStart = $"{level.GetANSIBackgroundColor()}{level.GetANSIForegroundColor()}";
+				string Datetime = $"[{DateTime.UtcNow:u}]";
+				string DebugMsg = $"[{level.Name,-5}]";
+				string eventname = eventID.Name.Length > 10 ? eventID.Name[..10] : eventID.Name;
+				string EventMsg = $"[{eventname,-10}/{eventID.ID:000}]";
+				string CallerMethod = GetDebugInfo();
+				string AnsiReset = "\u001b[0m";
 
-					string LogMessage = $"{Datetime}{DebugMsg}{(Config.UseEvents ? EventMsg : "")}[{(Config.ShowDebugInfo ? CallerMethod : "")}] {loginfo}";
+				string LogMessage = $"{Datetime}{DebugMsg}{(Config.UseEvents ? EventMsg : "")}[{(Config.ShowDebugInfo ? CallerMethod : "")}] {loginfo}";
 
-					Console.WriteLine($"{AnsiReset}{AnsiStart}{LogMessage}{AnsiReset}");
+				Console.WriteLine($"{AnsiReset}{AnsiStart}{LogMessage}{AnsiReset}");
 
-					if (Config.SaveLogToFile) SaveToFile(LogMessage + "\r\n");
-				}
+				if (Config.SaveLogToFile) Engine.Append(LogMessage + "\r\n", level.Severity);
 			}
+
 		}
 
 		/// <summary>
@@ -69,65 +89,25 @@ namespace Logger.AdvancedLogger
 		/// <param name="exception">Exception to be logged</param>
 		/// <param name="eventID">Event ID </param> //TODO
 		/// <param name="flushConsole">If true, clears the console before sending the message</param>
-		public static void Log(LogLevel level, Exception exception, EventID eventID = null, bool flushConsole = false)
+		public void Log(LogLevel level, Exception exception, EventID eventID = null, bool flushConsole = false)
 		{
 			string output = $"\n{exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}";
 			if (exception.InnerException != null)
 				output += $"\n{exception.InnerException.GetType().Name}: {exception.InnerException.Message}\n{exception.InnerException.StackTrace}";
-			
 
-			Log(level, output, eventID,	flushConsole);
+
+			Log(level, output, eventID, flushConsole);
 		}
 
-
-		private static void SaveToFile(string s)
-		{
-			string logpath = $"{Config.LogFolder}\\{Config.LogFile}";
-			FileInfo fileinfo = new(logpath);
-			
-			bool NeedsRotation = false;
-
-			if (Config.LogRotationMode == LogRotationMode.Size)
-			{
-				if (Config.MaxSize == 0) throw new ArgumentException("You have selected a rotation mode by size, yet size is zero");
-
-				NeedsRotation = fileinfo.Length >= Config.MaxSize;
-			}
-
-			if (Config.LogRotationMode == LogRotationMode.Date)
-			{
-				switch (Config.LogRotationTime)
-				{
-					case LogRotationTime.Daily:
-						NeedsRotation = fileinfo.CreationTimeUtc.AddMinutes(5) <= DateTime.UtcNow; //TODO change this on release
-						break;
-
-					case LogRotationTime.Weekly:
-						NeedsRotation = fileinfo.CreationTimeUtc.AddDays(7) <= DateTime.UtcNow;
-						break;
-
-					case LogRotationTime.Monthly:
-						NeedsRotation = fileinfo.CreationTimeUtc.AddMonths(1) <= DateTime.UtcNow;
-						break;
-				}
-			}
-			if (!Directory.Exists(Config.LogFolder))
-				Directory.CreateDirectory(Config.LogFolder);
-			
-
-			File.AppendAllText(logpath, s);
-
-			if (fileinfo.Exists && NeedsRotation)
-			{
-				fileinfo.CreationTimeUtc = DateTime.UtcNow;
-				File.Move(logpath, $"{Config.LogFolder}\\{Config.RotatedLogName}");
-			}
+		public void ForceSave(){
+			Engine.WriteAll();
 		}
+
 		/// <summary>
 		/// It gets info of the caller
 		/// </summary>
 		/// <returns></returns>
-		private static string GetDebugInfo()
+		private string GetDebugInfo()
 		{
 			string output = "";
 

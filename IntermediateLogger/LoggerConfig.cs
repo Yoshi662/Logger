@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Logger.AdvancedLogger
+namespace Logger.IntermediateLogger
 {
 	public class LoggerConfig
 	{
@@ -22,7 +22,6 @@ namespace Logger.AdvancedLogger
 			LogRotationMode = LogRotationMode.None,
 			UseEvents = false,
 			ShowDebugInfo = false,
-			SaveSeverity = 999
 		};
 		/// <summary>
 		/// How the most receient or current log will be called
@@ -64,15 +63,6 @@ namespace Logger.AdvancedLogger
 		/// This will show both the calls and the line which this log has been called
 		/// </summary>
 		public bool ShowDebugInfo { get; set; }
-
-		/// <summary>
-		/// All events over this threshold will be inmeadtly saved
-		/// </summary>
-		public int SaveSeverity { get; set; }
-		/// <summary>
-		/// Time between miliseconds between writes to disk
-		/// </summary>
-		public int WriteFrequency { get; set; }
 
 		/// <summary>
 		/// Loads a <see cref="LoggerConfig"/> from a file

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Logger.AdvancedLogger
@@ -11,27 +13,98 @@ namespace Logger.AdvancedLogger
 	/// </summary>
 	internal class LogEngine
 	{
-		uint milisbetweenupdates = 5000;
-		string buffer = "";
+		private StringBuilder Buffer = new();
+		private LoggerConfig Config;
+		private FileInfo FileInfo;
+		string LogPath;
+
 		public LogEngine(LoggerConfig config)
 		{
-			//Checks to the config
+			Config = config;
+
+			LogPath = $"{config.LogFolder}\\{config.LogFile}";
+			FileInfo = new(LogPath);
+
+			if (!Directory.Exists(Config.LogFolder))
+				Directory.CreateDirectory(Config.LogFolder);
+
+			new Thread(() =>
+			{
+				while (true)
+				{
+					Thread.Sleep(Config.WriteFrequency);
+
+					bool NeedsRotation = false;
+
+					if (Config.LogRotationMode == LogRotationMode.Size)
+					{
+						if (Config.MaxSize == 0) throw new ArgumentException("You have selected a rotation mode by size, yet size is zero");
+
+						NeedsRotation = FileInfo.Length >= Config.MaxSize;
+					}
+
+					if (Config.LogRotationMode == LogRotationMode.Date)
+					{
+						switch (Config.LogRotationTime)
+						{
+							case LogRotationTime.Daily:
+								NeedsRotation = FileInfo.CreationTimeUtc.AddDays(1) <= DateTime.UtcNow;
+								break;
+
+							case LogRotationTime.Weekly:
+								NeedsRotation = FileInfo.CreationTimeUtc.AddDays(7) <= DateTime.UtcNow;
+								break;
+
+							case LogRotationTime.Monthly:
+								NeedsRotation = FileInfo.CreationTimeUtc.AddMonths(1) <= DateTime.UtcNow;
+								break;
+						}
+					}
+
+
+					WriteAll();
+
+					if (NeedsRotation)
+						Rotate();
+
+				}
+			}).Start();
 		}
 
-		public void Append(string input)
+		/// <summary>
+		/// Saves the log info the current buffer
+		/// </summary>
+		/// <param name="input">text made by the logger</param>
+		public void Append(string input, int severity)
 		{
-			buffer += input;
+			Buffer.Append(input);
+			if (severity >= Config.SaveSeverity)
+			{
+				WriteAll();
+			}
+		}
+		/// <summary>
+		/// Forces to write the current buffer into the disk
+		/// </summary>
+		public void WriteAll()
+		{
+			if (Buffer.Length > 0)
+			{
+				File.AppendAllText(LogPath, Buffer.ToString());
+				Buffer.Clear();
+			}
 		}
 
-		private void WriteAll(){
-			throw new NotImplementedException();	
+		private void Rotate()
+		{
+			//We assume the file is created
+			FileInfo.CreationTimeUtc = DateTime.UtcNow;
+			File.Move(LogPath, $"{Config.LogFolder}\\{Config.RotatedLogName}");
 		}
 
-		private void Rotate(){
-			throw new NotImplementedException();
-		}
-
-		private void CompressFiles(){
+		//TODO
+		private void CompressFiles()
+		{
 			throw new NotImplementedException();
 		}
 	}
