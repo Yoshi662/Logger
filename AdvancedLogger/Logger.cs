@@ -8,20 +8,16 @@ using System.Threading.Tasks;
 
 namespace Logger.AdvancedLogger
 {
-	//TODO add docs to LoggerConfig
-	//TODO? Add tests
-	//TODO? Use a Singleton on this class so I can use a StreamWriter instead of a File.Append to greatly improve performance
-
-
-
 	public class Logger
 	{
 		private static object _MessageLock = new();
+		private const string AnsiReset = "\u001b[0m";
+		private bool running = false;
 
 		/// <summary>
 		/// Current configuration of the logger. It has a Default Configuration
 		/// </summary>
-		public LoggerConfig Config = LoggerConfig.DefaultConfig;
+		private LoggerConfig Config;
 		private LogEngine Engine;
 
 		private static Logger _instance;
@@ -43,10 +39,30 @@ namespace Logger.AdvancedLogger
 
 		private Logger()
 		{
+		}
+		/// <summary>
+		/// Starts the logger
+		/// </summary>
+		/// <param name="config">Configuration of the logger</param>
+		public void Start(LoggerConfig? config)
+		{
+			Config = config ?? LoggerConfig.DefaultConfig;
 			if (Config.SaveLogToFile)
-			{
 				Engine = new(Config);
-			}
+			
+			running = true;
+		}
+		/// <summary>
+		/// Saves all to file and 
+		/// </summary>
+		public void Stop()
+		{
+			if (Config.SaveLogToFile)
+				Engine.WriteAll();
+
+			running = false;
+			Engine = null;
+			Config = null;
 		}
 
 		/// <summary>
@@ -59,6 +75,9 @@ namespace Logger.AdvancedLogger
 		/// <exception cref="ArgumentException">It gets thrown when rotations are enabled but no rotation setting is set</exception>
 		public void Log(LogLevel level, string loginfo, EventID eventID = null, bool flushConsole = false)
 		{
+			if (!running)
+				return;
+
 			eventID ??= new(0, "");
 
 			if (level.Severity >= Config.MinimumSeverityLevel)
@@ -71,11 +90,10 @@ namespace Logger.AdvancedLogger
 				string eventname = eventID.Name.Length > 10 ? eventID.Name[..10] : eventID.Name;
 				string EventMsg = $"[{eventname,-10}/{eventID.ID:000}]";
 				string CallerMethod = GetDebugInfo();
-				string AnsiReset = "\u001b[0m";
 
 				string LogMessage = $"{Datetime}{DebugMsg}{(Config.UseEvents ? EventMsg : "")}[{(Config.ShowDebugInfo ? CallerMethod : "")}] {loginfo}";
 
-				Console.WriteLine($"{AnsiReset}{AnsiStart}{LogMessage}{AnsiReset}");
+				if (Config.ShowToConsole) Console.WriteLine($"{AnsiReset}{AnsiStart}{LogMessage}{AnsiReset}");
 
 				if (Config.SaveLogToFile) Engine.Append(LogMessage + "\r\n", level.Severity);
 			}
@@ -99,7 +117,8 @@ namespace Logger.AdvancedLogger
 			Log(level, output, eventID, flushConsole);
 		}
 
-		public void ForceSave(){
+		public void ForceSave()
+		{
 			Engine.WriteAll();
 		}
 

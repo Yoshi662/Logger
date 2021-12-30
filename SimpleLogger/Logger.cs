@@ -19,7 +19,7 @@ namespace Logger.SimpleLogger
 		/// <summary>
 		/// Minimum set of severty where info will be displayed
 		/// </summary>
-		public static LogLevel LogLevel = LogLevel.Info;
+		public static LogLevel LogLevel = LogLevel.Debug;
 
 		/// <summary>
 		/// Logs into console and file
@@ -29,8 +29,7 @@ namespace Logger.SimpleLogger
 		/// <param name="flushConsole">Whether or not the console should be cleaned before logging</param>
 		public static void Log(LogLevel loglevel, string loginfo, bool flushConsole = false)
 		{
-			lock (_MessageLock)
-			{
+
 				if (!File.Exists(Logfile))
 				{
 					File.Create(Logfile);
@@ -55,7 +54,7 @@ namespace Logger.SimpleLogger
 
 					File.AppendAllText(Logfile, $"[{DateTime.Now:u}][{sLog}]: {loginfo}\r\n");
 				}
-			}
+			
 		}
 
 

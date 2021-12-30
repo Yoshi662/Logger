@@ -13,6 +13,9 @@ namespace Logger.AdvancedLogger
 	/// </summary>
 	internal class LogEngine
 	{
+		private object _MessageLock = new();
+
+
 		private StringBuilder Buffer = new();
 		private LoggerConfig Config;
 		private FileInfo FileInfo;
@@ -39,7 +42,7 @@ namespace Logger.AdvancedLogger
 					if (Config.LogRotationMode == LogRotationMode.Size)
 					{
 						if (Config.MaxSize == 0) throw new ArgumentException("You have selected a rotation mode by size, yet size is zero");
-
+						FileInfo.Refresh();
 						NeedsRotation = FileInfo.Length >= Config.MaxSize;
 					}
 
@@ -59,6 +62,9 @@ namespace Logger.AdvancedLogger
 								NeedsRotation = FileInfo.CreationTimeUtc.AddMonths(1) <= DateTime.UtcNow;
 								break;
 						}
+
+						if (FileInfo.CreationTimeUtc.Year == 1601)
+							NeedsRotation = false;
 					}
 
 
@@ -77,10 +83,13 @@ namespace Logger.AdvancedLogger
 		/// <param name="input">text made by the logger</param>
 		public void Append(string input, int severity)
 		{
-			Buffer.Append(input);
-			if (severity >= Config.SaveSeverity)
+			lock (Buffer)
 			{
-				WriteAll();
+				Buffer.Append(input);
+				if (severity >= Config.SaveSeverity)
+				{
+					WriteAll();
+				}
 			}
 		}
 		/// <summary>
@@ -88,10 +97,13 @@ namespace Logger.AdvancedLogger
 		/// </summary>
 		public void WriteAll()
 		{
-			if (Buffer.Length > 0)
+			lock (Buffer)
 			{
-				File.AppendAllText(LogPath, Buffer.ToString());
-				Buffer.Clear();
+				if (Buffer.Length > 0)
+				{
+					File.AppendAllText(LogPath, Buffer.ToString());
+					Buffer.Clear();
+				}
 			}
 		}
 

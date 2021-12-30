@@ -19,6 +19,7 @@ namespace Logger.AdvancedLogger
 			LogFolder = "Logs",
 			MinimumSeverityLevel = 0,
 			SaveLogToFile = false,
+			ShowToConsole = true,
 			LogRotationMode = LogRotationMode.None,
 			UseEvents = false,
 			ShowDebugInfo = false,
@@ -73,6 +74,10 @@ namespace Logger.AdvancedLogger
 		/// Time between miliseconds between writes to disk
 		/// </summary>
 		public int WriteFrequency { get; set; }
+		/// <summary>
+		/// Whether or not logs will be shown to the console
+		/// </summary>
+		public bool ShowToConsole { get; set; }
 
 		/// <summary>
 		/// Loads a <see cref="LoggerConfig"/> from a file
