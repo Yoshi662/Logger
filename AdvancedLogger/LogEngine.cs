@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -111,13 +112,14 @@ namespace Logger.AdvancedLogger
 		{
 			//We assume the file is created
 			FileInfo.CreationTimeUtc = DateTime.UtcNow;
-			File.Move(LogPath, $"{Config.LogFolder}\\{Config.RotatedLogName}");
-		}
-
-		//TODO
-		private void CompressFiles()
-		{
-			throw new NotImplementedException();
+			string rotatedpath = $"{Config.LogFolder}\\{Config.RotatedLogName}";
+			File.Move(LogPath, rotatedpath);
+			if (Config.CompressRotatedFiles)
+			{
+				using ZipArchive archive = ZipFile.Open(rotatedpath + ".zip", ZipArchiveMode.Create);
+				var entry = archive.CreateEntryFromFile(rotatedpath, Config.RotatedLogName);
+			}
+			File.Delete(rotatedpath);
 		}
 	}
 }

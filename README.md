@@ -1,5 +1,4 @@
-###### WIP
----
+
 # Loggers
 Here I'll provide three loggers that you can use on any of your proyects.
 Varing on the level of complexity and configuration I'm sure I have a logger for your application.  
@@ -27,5 +26,5 @@ Just copy the code in your proyect. Change the namespace and that's it!
 - Highly customizable
 - High performance
 - Comes with a huge array of LogLevels
-- Compression of Rotated Files `WIP`
+- Compression of Rotated Files
 

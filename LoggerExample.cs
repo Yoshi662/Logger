@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 
 namespace Logger.AdvancedLogger
 {
@@ -14,13 +15,15 @@ namespace Logger.AdvancedLogger
 				LogRotationMode = LogRotationMode.Date,
 				LogFile = "Current.log",
 				LogFolder = "Logs",
+				CompressRotatedFiles = true,
 				ShowDebugInfo = true,
 				UseEvents = true,
-				WriteFrequency = 5000,
+				WriteFrequency = 30000,
 				LogRotationTime = LogRotationTime.Daily,
 				MinimumSeverityLevel = 0,
 				SaveSeverity = 999
 			};
+
 
 			File.Delete(config.LogFolder + "\\" + config.LogFile);
 			Logger.Instance.Start(config);
@@ -28,7 +31,7 @@ namespace Logger.AdvancedLogger
 			{
 				new System.Threading.Thread(() =>
 				{
-					var later = DateTime.Now.AddMinutes(1);
+					var later = DateTime.Now.AddSeconds(20);
 					int counter = 0;
 					while (DateTime.Now < later)
 					{

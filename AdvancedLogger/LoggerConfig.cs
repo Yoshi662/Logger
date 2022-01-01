@@ -78,7 +78,10 @@ namespace Logger.AdvancedLogger
 		/// Whether or not logs will be shown to the console
 		/// </summary>
 		public bool ShowToConsole { get; set; }
-
+		/// <summary>
+		/// If set to true, it will compress logs (Zip format) on rotation
+		/// </summary>
+		public bool CompressRotatedFiles { get; set; }
 		/// <summary>
 		/// Loads a <see cref="LoggerConfig"/> from a file
 		/// </summary>
