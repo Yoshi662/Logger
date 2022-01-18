@@ -27,4 +27,4 @@ Just copy the code in your proyect. Change the namespace and that's it!
 - High performance
 - Comes with a huge array of LogLevels
 - Compression of Rotated Files
-
+- The Engine runs in its own thread. Preventing locks with other threads
