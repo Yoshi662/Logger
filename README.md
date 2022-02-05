@@ -28,3 +28,4 @@ Just copy the code in your proyect. Change the namespace and that's it!
 - Comes with a huge array of LogLevels
 - Compression of Rotated Files
 - Allows to use the Debug Console instead of the Default Output Console
+- The Engine runs in its own thread. Preventing locks with other threads
