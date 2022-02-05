@@ -27,4 +27,4 @@ Just copy the code in your proyect. Change the namespace and that's it!
 - High performance
 - Comes with a huge array of LogLevels
 - Compression of Rotated Files
-
+- Allows to use the Debug Console instead of the Default Output Console

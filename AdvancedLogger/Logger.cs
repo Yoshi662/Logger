@@ -43,8 +43,8 @@ namespace Logger.AdvancedLogger
 		/// <summary>
 		/// Starts the logger
 		/// </summary>
-		/// <param name="config">Configuration of the logger</param>
-		public void Start(LoggerConfig? config)
+		/// <param name="config">Configuration of the logger, if null or none provided will default to <see cref="LoggerConfig.DefaultConfig"/></param>
+		public void Start(LoggerConfig config = null)
 		{
 			Config = config ?? LoggerConfig.DefaultConfig;
 			if (Config.SaveLogToFile)
@@ -82,18 +82,19 @@ namespace Logger.AdvancedLogger
 
 			if (level.Severity >= Config.MinimumSeverityLevel)
 			{
-				if (flushConsole) Console.Clear();
+				if (flushConsole) { Console.Clear(); Debug.Flush(); }
 
 				string AnsiStart = $"{level.GetANSIBackgroundColor()}{level.GetANSIForegroundColor()}";
 				string Datetime = $"[{DateTime.UtcNow:u}]";
 				string DebugMsg = $"[{level.Name,-5}]";
 				string eventname = eventID.Name.Length > 10 ? eventID.Name[..10] : eventID.Name;
 				string EventMsg = $"[{eventname,-10}/{eventID.ID:000}]";
-				string CallerMethod = GetDebugInfo();
 
-				string LogMessage = $"{Datetime}{DebugMsg}{(Config.UseEvents ? EventMsg : "")}[{(Config.ShowDebugInfo ? CallerMethod : "")}] {loginfo}";
+				string LogMessage = $"{Datetime}{DebugMsg}{(Config.UseEvents ? EventMsg : "")}[{(Config.ShowDebugInfo ? GetDebugInfo() : "")}] {loginfo}";
 
 				if (Config.ShowToConsole) Console.WriteLine($"{AnsiReset}{AnsiStart}{LogMessage}{AnsiReset}");
+				if (Config.ShowToDebug) 
+				Debug.WriteLine($"{LogMessage}");
 
 				if (Config.SaveLogToFile) Engine.Append(LogMessage + "\r\n", level.Severity);
 			}
@@ -117,11 +118,6 @@ namespace Logger.AdvancedLogger
 			Log(level, output, eventID, flushConsole);
 		}
 
-		public void ForceSave()
-		{
-			Engine.WriteAll();
-		}
-
 		/// <summary>
 		/// It gets info of the caller
 		/// </summary>
@@ -139,6 +135,14 @@ namespace Logger.AdvancedLogger
 			output += $"l:{stack.GetFrame(2).GetFileLineNumber():0000}"; //Frame 2 is always the caller of Log()
 
 			return output;
+		}
+
+		/// <summary>
+		/// Writes all the buffer into the file
+		/// </summary>
+		public void ForceSave()
+		{
+			Engine.WriteAll();
 		}
 	}
 }

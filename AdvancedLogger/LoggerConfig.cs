@@ -11,34 +11,35 @@ namespace Logger.AdvancedLogger
 	public class LoggerConfig
 	{
 		/// <summary>
-		/// Default configuration to the logger. It will show everything in console while not saving anything in disk
+		/// Default configuration to the logger. It will show everything in console while not saving anything in disk.
 		/// </summary>
 		public static readonly LoggerConfig DefaultConfig = new()
 		{
 			LogFile = "Log.txt", //Giving it a name will prevent errors in the future
 			LogFolder = "Logs",
 			MinimumSeverityLevel = 0,
-			SaveLogToFile = false,
-			ShowToConsole = true,
+			SaveLogToFile = true,
+			ShowToConsole = false,
+			ShowToDebug = false,
 			LogRotationMode = LogRotationMode.None,
 			UseEvents = false,
 			ShowDebugInfo = false,
 			SaveSeverity = 999
 		};
 		/// <summary>
-		/// How the most receient or current log will be called
+		/// How the most receient or current log will be called.
 		/// </summary>
 		public string LogFile { get; set; }
 		/// <summary>
-		/// Names for the rotated log names
+		/// Names for the rotated log names.
 		/// </summary>
 		public string RotatedLogName { get => $"{DateTime.UtcNow:yyyyMMdd_hhmmss}.log"; }
 		/// <summary>
-		/// Where the logs will be saved
+		/// Where the logs will be saved.
 		/// </summary>
 		public string LogFolder { get; set; }
 		/// <summary>
-		/// Minimum level on which the logs will be displayed to both console and files
+		/// Minimum level on which the logs will be displayed to both console and files.
 		/// </summary>
 		public int MinimumSeverityLevel { get; set; }
 		/// <summary>
@@ -46,7 +47,7 @@ namespace Logger.AdvancedLogger
 		/// </summary>
 		public bool SaveLogToFile { get; set; }
 		/// <summary>
-		/// Mode for the rotation of files
+		/// Mode for the rotation of files.
 		/// </summary>
 		public LogRotationMode LogRotationMode { get; set; }
 		/// <summary>
@@ -54,39 +55,44 @@ namespace Logger.AdvancedLogger
 		/// </summary>
 		public uint MaxSize { get; set; }
 		/// <summary>
-		/// Time between Rotations
+		/// Time between Rotations.
 		/// </summary>
 		public LogRotationTime LogRotationTime { get; set; }
 		/// <summary>
-		/// Whether or not events will be logged
+		/// Whether or not events will be logged.
 		/// </summary>
 		public bool UseEvents { get; set; }
 		/// <summary>
-		/// This will show both the calls and the line which this log has been called
+		/// This will show both the calls and the line which this log has been called.
 		/// </summary>
 		public bool ShowDebugInfo { get; set; }
 
 		/// <summary>
-		/// All events over this threshold will be inmeadtly saved
+		/// All events over this threshold will be inmeadtly saved.
 		/// </summary>
 		public int SaveSeverity { get; set; }
 		/// <summary>
-		/// Time between miliseconds between writes to disk
+		/// Time between miliseconds between writes to disk.
 		/// </summary>
 		public int WriteFrequency { get; set; }
 		/// <summary>
-		/// Whether or not logs will be shown to the console
+		/// Whether or not logs will be shown to the console.
 		/// </summary>
-		public bool ShowToConsole { get; set; }
+		public bool ShowToConsole { get; set; }    
 		/// <summary>
-		/// If set to true, it will compress logs (Zip format) on rotation
+		/// Whether or not logs will be shown to the <see cref="System.Diagnostics.Debug"/> console.
+		/// <para>Warning. The heavy use of the Debug Console can affect your program.</para>
+		/// </summary>
+		public bool ShowToDebug { get; set; }
+		/// <summary>
+		/// If set to true, it will compress logs (Zip format) on rotation.
 		/// </summary>
 		public bool CompressRotatedFiles { get; set; }
 		/// <summary>
-		/// Loads a <see cref="LoggerConfig"/> from a file
+		/// Loads a <see cref="LoggerConfig"/> from a file.
 		/// </summary>
-		/// <param name="filepath">Path to the file</param>
-		/// <returns>The <see cref="LoggerConfig"/></returns>
+		/// <param name="filepath">Path to the file.</param>
+		/// <returns>The <see cref="LoggerConfig"/>.</returns>
 		public static LoggerConfig LoadConfig(string filepath) =>
 			JsonSerializer.Deserialize<LoggerConfig>(
 				File.ReadAllText(filepath)
@@ -94,10 +100,10 @@ namespace Logger.AdvancedLogger
 
 
 		/// <summary>
-		/// Save current <see cref="LoggerConfig"/> into a file
+		/// Save current <see cref="LoggerConfig"/> into a file.
 		/// </summary>
-		/// <param name="filepath">Path to the file</param>
-		/// <param name="config"><see cref="LoggerConfig"/> to be saved</param>
+		/// <param name="filepath">Path to the file.</param>
+		/// <param name="config"><see cref="LoggerConfig"/> to be saved.</param>
 		public static void SaveConfig(string filepath, LoggerConfig config) =>
 			File.WriteAllText(filepath,
 				JsonSerializer.Serialize<LoggerConfig>(config,
