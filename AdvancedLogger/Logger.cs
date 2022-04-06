@@ -17,7 +17,7 @@ namespace Logger.AdvancedLogger
 		/// <summary>
 		/// Current configuration of the logger. It has a Default Configuration
 		/// </summary>
-		private LoggerConfig Config;
+		public LoggerConfig Config;
 		private LogEngine Engine;
 
 		private static Logger _instance;
@@ -53,13 +53,15 @@ namespace Logger.AdvancedLogger
 			running = true;
 		}
 		/// <summary>
-		/// Saves all to file and 
+		/// Writes buffer (if enabled) and closes the program
 		/// </summary>
 		public void Stop()
 		{
 			if (Config.SaveLogToFile)
+			{
 				Engine.WriteAll();
-
+				Engine.Dispose();
+			}
 			running = false;
 			Engine = null;
 			Config = null;
@@ -90,7 +92,7 @@ namespace Logger.AdvancedLogger
 				string eventname = eventID.Name.Length > 10 ? eventID.Name[..10] : eventID.Name;
 				string EventMsg = $"[{eventname,-10}/{eventID.ID:000}]";
 
-				string LogMessage = $"{Datetime}{DebugMsg}{(Config.UseEvents ? EventMsg : "")}[{(Config.ShowDebugInfo ? GetDebugInfo() : "")}] {loginfo}";
+				string LogMessage = $"{Datetime}{DebugMsg}{(Config.UseEvents ? EventMsg : "")}{(Config.ShowDebugInfo ? GetDebugInfo() : "")} {loginfo}";
 
 				if (Config.ShowToConsole) Console.WriteLine($"{AnsiReset}{AnsiStart}{LogMessage}{AnsiReset}");
 				if (Config.ShowToDebug) 
@@ -110,9 +112,9 @@ namespace Logger.AdvancedLogger
 		/// <param name="flushConsole">If true, clears the console before sending the message</param>
 		public void Log(LogLevel level, Exception exception, EventID eventID = null, bool flushConsole = false)
 		{
-			string output = $"\n{exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}";
+			string output = $"\n{exception}";
 			if (exception.InnerException != null)
-				output += $"\n{exception.InnerException.GetType().Name}: {exception.InnerException.Message}\n{exception.InnerException.StackTrace}";
+				output += $"\n\t{exception.InnerException}";
 
 
 			Log(level, output, eventID, flushConsole);
@@ -132,7 +134,7 @@ namespace Logger.AdvancedLogger
 			{
 				output += stack.GetFrame(i).GetMethod().Name + (i == stackframes - 1 ? "()" : ".");
 			}
-			output += $"l:{stack.GetFrame(2).GetFileLineNumber():0000}"; //Frame 2 is always the caller of Log()
+			output += $"[l:{stack.GetFrame(2).GetFileLineNumber():0000}]"; //Frame 2 is always the caller of Log()
 
 			return output;
 		}
@@ -142,7 +144,8 @@ namespace Logger.AdvancedLogger
 		/// </summary>
 		public void ForceSave()
 		{
-			Engine.WriteAll();
+			if (Config.SaveLogToFile)
+				Engine.WriteAll();
 		}
 	}
 }

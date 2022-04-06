@@ -12,9 +12,12 @@ namespace Logger.AdvancedLogger
 	/// <summary>
 	/// Class used to handle the "heavy load" of writing into disk and/or RotateFiles
 	/// </summary>
-	internal class LogEngine
+	internal class LogEngine : IDisposable
 	{
 		private object _MessageLock = new();
+
+		private CancellationTokenSource Token = new CancellationTokenSource();
+		private Task EngineTask;
 
 
 		private StringBuilder Buffer = new();
@@ -32,50 +35,51 @@ namespace Logger.AdvancedLogger
 			if (!Directory.Exists(Config.LogFolder))
 				Directory.CreateDirectory(Config.LogFolder);
 
-			new Thread(() =>
+			EngineTask = new Task(() => EngineLoop());
+			Token.Token.Register(() => EngineTask.Start());
+		}
+
+		private void EngineLoop(){
+			while (!Token.IsCancellationRequested)
 			{
-				while (true)
+				Thread.Sleep(Config.WriteFrequency);
+
+				bool NeedsRotation = false;
+
+				if (Config.LogRotationMode == LogRotationMode.Size)
 				{
-					Thread.Sleep(Config.WriteFrequency);
-
-					bool NeedsRotation = false;
-
-					if (Config.LogRotationMode == LogRotationMode.Size)
-					{
-						if (Config.MaxSize == 0) throw new ArgumentException("You have selected a rotation mode by size, yet size is zero");
-						FileInfo.Refresh();
-						NeedsRotation = FileInfo.Length >= Config.MaxSize;
-					}
-
-					if (Config.LogRotationMode == LogRotationMode.Date)
-					{
-						switch (Config.LogRotationTime)
-						{
-							case LogRotationTime.Daily:
-								NeedsRotation = FileInfo.CreationTimeUtc.AddDays(1) <= DateTime.UtcNow;
-								break;
-
-							case LogRotationTime.Weekly:
-								NeedsRotation = FileInfo.CreationTimeUtc.AddDays(7) <= DateTime.UtcNow;
-								break;
-
-							case LogRotationTime.Monthly:
-								NeedsRotation = FileInfo.CreationTimeUtc.AddMonths(1) <= DateTime.UtcNow;
-								break;
-						}
-
-						if (FileInfo.CreationTimeUtc.Year == 1601)
-							NeedsRotation = false;
-					}
-
-
-					WriteAll();
-
-					if (NeedsRotation)
-						Rotate();
-
+					if (Config.MaxSize == 0) throw new ArgumentException("You have selected a rotation mode by size, yet size is zero");
+					FileInfo.Refresh();
+					NeedsRotation = FileInfo.Length >= Config.MaxSize;
 				}
-			}).Start();
+
+				if (Config.LogRotationMode == LogRotationMode.Date)
+				{
+					switch (Config.LogRotationTime)
+					{
+						case LogRotationTime.Daily:
+							NeedsRotation = FileInfo.CreationTimeUtc.AddDays(1) <= DateTime.UtcNow;
+							break;
+
+						case LogRotationTime.Weekly:
+							NeedsRotation = FileInfo.CreationTimeUtc.AddDays(7) <= DateTime.UtcNow;
+							break;
+
+						case LogRotationTime.Monthly:
+							NeedsRotation = FileInfo.CreationTimeUtc.AddMonths(1) <= DateTime.UtcNow;
+							break;
+					}
+
+					if (FileInfo.CreationTimeUtc.Year == 1601)
+						NeedsRotation = false;
+				}
+
+
+				WriteAll();
+
+				if (NeedsRotation)
+					Rotate();
+			}	
 		}
 
 		/// <summary>
@@ -120,6 +124,11 @@ namespace Logger.AdvancedLogger
 				var entry = archive.CreateEntryFromFile(rotatedpath, Config.RotatedLogName);
 			}
 			File.Delete(rotatedpath);
+		}
+
+		public virtual void Dispose()
+		{
+			Token.Cancel();
 		}
 	}
 }

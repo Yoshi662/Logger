@@ -9,8 +9,6 @@ namespace Logger.SimpleLogger
 {
 	public static class Logger
 	{
-		private static object _MessageLock = new();
-
 		/// <summary>
 		/// File where the log will be written
 		/// </summary>
@@ -62,9 +60,6 @@ namespace Logger.SimpleLogger
 		{
 			switch (l)
 			{
-				case LogLevel.Trace:
-					Console.ForegroundColor = ConsoleColor.Gray;
-					break;
 				case LogLevel.Debug:
 					Console.ForegroundColor = ConsoleColor.White;
 					break;
@@ -84,11 +79,6 @@ namespace Logger.SimpleLogger
 
 	public enum LogLevel
 	{
-		/// <summary>
-		/// Every event can be traced
-		/// </summary>
-		Trace,
-
 		/// <summary>
 		/// For diagnosting issues 
 		/// </summary>
