@@ -28,31 +28,31 @@ namespace Logger.SimpleLogger
 		public static void Log(LogLevel loglevel, string loginfo, bool flushConsole = false)
 		{
 
-				if (!File.Exists(Logfile))
-				{
-					File.Create(Logfile);
-					System.Threading.Thread.Sleep(100); //Sometimes creating and writing into the same file can lead to issues. This delay should fix it. I know it's a bit yanky but it works
-				}
+			if (!File.Exists(Logfile))
+			{
+				File.Create(Logfile);
+				System.Threading.Thread.Sleep(100); //Sometimes creating and writing into the same file can lead to issues. This delay should fix it. I know it's a bit yanky but it works
+			}
 
 
-				if (flushConsole)
-				{
-					Console.Clear();
-				}
+			if (flushConsole)
+			{
+				Console.Clear();
+			}
 
-				if (loglevel >= LogLevel)
-				{
-					string sLog = loglevel.ToString().PadRight(5);
-					ChangeConsoleColor(loglevel);
-					string msg = $"[{DateTime.Now:u}]";
-					Console.Write(msg);
-					Console.Write($"[{sLog}]");
-					Console.ResetColor();
-					Console.Write(" " + loginfo + "\r\n");
+			if (loglevel >= LogLevel)
+			{
+				string sLog = loglevel.ToString().PadRight(5);
+				ChangeConsoleColor(loglevel);
+				string msg = $"[{DateTime.Now:u}]";
+				Console.Write(msg);
+				Console.Write($"[{sLog}]");
+				Console.ResetColor();
+				Console.Write(" " + loginfo + "\r\n");
 
-					File.AppendAllText(Logfile, $"[{DateTime.Now:u}][{sLog}]: {loginfo}\r\n");
-				}
-			
+				File.AppendAllText(Logfile, $"[{DateTime.Now:u}][{sLog}]: {loginfo}\r\n");
+			}
+
 		}
 
 

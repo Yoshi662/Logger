@@ -10,7 +10,7 @@ namespace Logger.AdvancedLogger
 			LoggerConfig config = new LoggerConfig()
 			{
 				ShowToConsole = true,
-				SaveLogToFile = true,
+				SaveLogToFile = false,
 				LogRotationMode = LogRotationMode.Date,
 				LogFile = "Current.log",
 				LogFolder = "Logs",

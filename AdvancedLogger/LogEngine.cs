@@ -48,7 +48,7 @@ namespace Logger.AdvancedLogger
 
 				if (Config.LogRotationMode == LogRotationMode.Size)
 				{
-					if (Config.MaxSize == 0) throw new ArgumentException("You have selected a rotation mode by size, yet size is zero");
+					if (Config.MaxSize <= 0) throw new ArgumentException("You have selected a rotation mode by size, yet size is zero or less");
 					FileInfo.Refresh();
 					NeedsRotation = FileInfo.Length >= Config.MaxSize;
 				}
